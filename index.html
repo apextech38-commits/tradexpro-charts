@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" dir="auto">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="" id="dynamic-favicon" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="title" content="TradeXpro Charts" />
+        <meta name="description" content="Live charts for TradeXpro." />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="" />
+        <meta property="og:title" content="TradeXpro Charts" />
+        <meta property="og:description" content="Live charts for TradeXpro." />
+        <meta property="og:image" content="" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TradeXpro Charts" />
+        <meta name="twitter:description" content="Live charts for TradeXpro." />
+        <meta name="twitter:image" content="" />
+        <meta name="robots" content="index, follow" />
+
+        <link rel="manifest" href="" id="dynamic-manifest" />
+        <meta name="theme-color" content="#0e0e23" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="" />
+        <link rel="apple-touch-icon" href="" id="dynamic-apple-icon" />
+        <title>Loading...</title>
+        <style>
+            :root {
+                font-size: 62.5%;
+                --loader-primary: #dc3545;
+                --loader-secondary: #ff6b6b;
+            }
+            #initial-loader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: #0e0e23;
+                z-index: 99999;
+                transition: opacity 0.3s ease-out;
+            }
+            #initial-loader.fade-out {
+                opacity: 0;
+                pointer-events: none;
+            }
+            .loader-spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid rgba(220, 53, 69, 0.2);
+                border-top-color: var(--loader-primary);
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
+        <script>
+            // Same branding-cache read as the rest of TradeXpro — keeps the loader
+            // color/logo consistent across sub-apps before React mounts.
+            (function () {
+                try {
+                    var cacheKey = 'deriv_sites_loader_cache';
+                    var cacheStr = localStorage.getItem(cacheKey);
+                    if (cacheStr) {
+                        var cache = JSON.parse(cacheStr);
+                        var domain = window.location.host;
+                        var entry = cache[domain];
+                        if (entry && entry.primaryColor) {
+                            document.documentElement.style.setProperty('--loader-primary', entry.primaryColor);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error reading loader cache:', e);
+                }
+            })();
+        </script>
+    </head>
+
+    <body class="body theme theme--light">
+        <div id="initial-loader">
+            <div id="loader-content">
+                <div class="loader-spinner"></div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                try {
+                    var cacheKey = 'deriv_sites_loader_cache';
+                    var cacheStr = localStorage.getItem(cacheKey);
+                    var logoPath = '';
+                    var siteName = '';
+
+                    if (cacheStr) {
+                        var cache = JSON.parse(cacheStr);
+                        var domain = window.location.host;
+                        var entry = cache[domain];
+                        if (entry) {
+                            logoPath = entry.logoPath || '';
+                            siteName = entry.siteName || '';
+                        }
+                    }
+
+                    if (logoPath) {
+                        var faviconEl = document.getElementById('dynamic-favicon');
+                        if (faviconEl) faviconEl.href = logoPath;
+                        var appleIconEl = document.getElementById('dynamic-apple-icon');
+                        if (appleIconEl) appleIconEl.href = logoPath;
+                    }
+                    if (siteName) {
+                        document.title = siteName + ' - Charts';
+                    }
+                } catch (e) {
+                    console.error('Error applying branding cache:', e);
+                }
+            })();
+        </script>
+
+        <div id="modal_root" class="modal-root"></div>
+        <div id="popup_root" class="popup-root"></div>
+        <div id="root"></div>
+
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
+</html>
