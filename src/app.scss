@@ -10,3 +10,20 @@ html, body, #root {
     display: flex;
     flex-direction: column;
 }
+
+// .dashboard__chart-wrapper (rendered by chart.tsx) carries no CSS rule of its
+// own anywhere in profithubnewtool's source — only its modifier variants
+// (--safari, --modal) are styled. In the original app it gets its actual
+// height by inheriting from a whole Tabs/TabPanel layout system
+// (main__container, main__tabs, etc. in main.tsx) that isn't part of this
+// standalone extraction. Without that inherited chain, this element resolves
+// to height:auto (effectively 0 for an empty chart), so SmartChart's
+// ResizeObserver never sees real dimensions and the canvas never renders,
+// even though the toolbar/zoom UI chrome (which doesn't depend on the
+// chart's own measured size) mounts fine. Giving it an explicit height here
+// is the standalone-app equivalent of that inherited layout.
+.dashboard__chart-wrapper {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+}
