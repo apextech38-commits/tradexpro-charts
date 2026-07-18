@@ -48,8 +48,21 @@ function main() {
         }
     }
 
+    // dist/chart -> js/smartcharts/chart (recursive)
     copyRecursive(path.join(PKG_DIST, 'chart'), path.join(smartchartsOut, 'chart'));
+
+    // dist/assets -> assets (recursive, at public root) AND js/smartcharts/assets.
+    // rsbuild's config only copies to the root 'assets' path, but that setup
+    // serves the whole app differently than ours does. Since we explicitly set
+    // setSmartChartsPublicPath('/js/smartcharts/') in App.tsx, Flutter's own
+    // asset loader (FontManifest.json, AssetManifest.json, etc.) resolves paths
+    // relative to that SAME base — confirmed by the actual failing request:
+    // /js/smartcharts/assets/FontManifest.json, which Cloudflare's SPA fallback
+    // was serving index.html for instead of a real 404. Copying to both
+    // locations keeps parity with the original config while actually matching
+    // where this app's Flutter engine looks.
     copyRecursive(path.join(PKG_DIST, 'assets'), path.join(PUBLIC_DIR, 'assets'));
+    copyRecursive(path.join(PKG_DIST, 'assets'), path.join(smartchartsOut, 'assets'));
 
     console.log('[copy-smartcharts-assets] Copied smartcharts-champion assets into public/');
 }
