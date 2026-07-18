@@ -8,14 +8,15 @@
         "build": "vite build",
         "watch": "vite build --watch",
         "serve": "http-server dist -p 8443 -a localhost -o",
-        "type-check": "tsc --noEmit"
+        "type-check": "tsc --noEmit",
+        "postinstall": "node scripts/copy-smartcharts-assets.js"
     },
     "dependencies": {
+        "@deriv-com/smartcharts-champion": "file:deriv-com-smartcharts-champion-1.9.15.tgz",
         "@deriv-com/translations": "^1.4.6",
         "@deriv-com/ui": "1.36.4",
         "@deriv-com/utils": "^0.0.59",
         "@deriv/deriv-api": "^1.0.15",
-        "@deriv/deriv-charts": "^2.9.1",
         "@deriv/quill-icons": "^2.4.18",
         "classnames": "^2.5.1",
         "clsx": "^2.1.1",
