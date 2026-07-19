@@ -1,33 +1,18 @@
 import { useEffect, useState } from 'react';
 import { setSmartChartsPublicPath } from '@deriv/deriv-charts';
+import { initializeI18n, TranslationProvider, useTranslations } from '@deriv-com/translations';
 import RootStore from '@/stores/root-store';
 import { StoreContext } from '@/hooks/useStore';
 import ChartWrapper from '@/pages/chart/chart-wrapper';
 import { api_base } from '@/external/bot-skeleton';
 import './app.scss';
 
-// smartcharts-champion's dynamic chunk loading (flutter-chart-loader, i18n
-// json chunks, etc.) auto-detects its own base path by scanning <script> tags
-// for one whose src matches its own bundle filename — a classic webpack
-// runtime pattern. That only works if the bundle is loaded via a literal
-// <script> tag at a known path. Since Vite imports it as an ES module through
-// its dependency graph instead, that auto-detection resolves to the wrong
-// path (site root) and every dynamic chunk 404s. profithubnewtool sidesteps
-// this the same way, in its app shell (app-content.jsx) rather than the chart
-// page itself: call the package's own explicit override once, early, before
-// any chart tries to load a dynamic chunk. The assets live at /js/smartcharts/
-// because that's where scripts/copy-smartcharts-assets.js puts them (see
-// package.json postinstall).
 setSmartChartsPublicPath('/js/smartcharts/');
 
-// Module-level singleton, deliberately outside the component. api_base.init()
-// has an early-return guard (`if (this.is_initializing) return;`) that makes
-// it unsafe to call twice concurrently — the second call resolves instantly
-// without waiting for the first to finish. React 18 StrictMode double-invokes
-// effects in dev (mount → cleanup → mount again), which was calling init()
-// twice and letting the second, premature "ready" state win the race. This
-// promise is created once and shared across both invocations, so both await
-// the same real completion instead of racing two separate calls.
+// Translations CDN is optional — same pattern as tradexpro-botbuilder's
+// src/app/App.tsx. Without CDN env vars, this defaults to English.
+const i18nInstance = initializeI18n({ cdnUrl: '' });
+
 let bootPromise: Promise<void> | null = null;
 
 function bootApiBase(): Promise<void> {
@@ -45,9 +30,24 @@ function bootApiBase(): Promise<void> {
     return bootPromise;
 }
 
-const App = () => {
+// useTranslations() must be called inside TranslationProvider's subtree, not
+// the same component that renders the provider — hence this split. Missing
+// this entirely (chart.tsx reads common.current_language for SmartChart's
+// settings.language prop) meant that prop was always an empty string, which
+// is the likely reason SmartChart never issued a ticks_history request:
+// confirmed via the WebSocket Messages panel showing active_symbols,
+// trading_times, and heartbeats, but no ticks_history/ticks request ever,
+// even after multiple heartbeat cycles had passed.
+const AppInner = () => {
     const [store] = useState(() => new RootStore());
     const [is_api_ready, setIsApiReady] = useState(false);
+    const { currentLang } = useTranslations();
+
+    useEffect(() => {
+        if (currentLang) {
+            store.common.setCurrentLanguage(currentLang);
+        }
+    }, [currentLang, store]);
 
     useEffect(() => {
         let cancelled = false;
@@ -80,5 +80,11 @@ const App = () => {
         </StoreContext.Provider>
     );
 };
+
+const App = () => (
+    <TranslationProvider defaultLang='EN' i18nInstance={i18nInstance}>
+        <AppInner />
+    </TranslationProvider>
+);
 
 export default App;
