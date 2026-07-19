@@ -78,9 +78,14 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
     }, []);
 
-    // Initialize adapter - runs once when chart_api.api is available
+    // Initialize adapter - chart_api.api is not MobX-observable, so a plain
+    // effect only ever sees its value at mount. Poll until it appears, since
+    // the WebSocket connects asynchronously after this hook first runs.
     useEffect(() => {
-        if (!adapterInitialized && chart_api.api) {
+        if (adapterInitialized) return;
+
+        const tryInit = () => {
+            if (!chart_api.api) return false;
             try {
                 const transport = createTransport();
                 const services = createServices();
@@ -100,7 +105,16 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                     setIsLoading(false);
                 }
             }
-        }
+            return true;
+        };
+
+        if (tryInit()) return;
+
+        const pollId = setInterval(() => {
+            if (tryInit()) clearInterval(pollId);
+        }, 100);
+
+        return () => clearInterval(pollId);
     }, [adapterInitialized]);
 
     // Load chart data when adapter is initialized
