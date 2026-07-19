@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
@@ -14,8 +14,16 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
 
-    const { chart_type, granularity, onSymbolChange, setChartStatus, symbol, updateChartType, updateGranularity } =
-        chart_store;
+    const {
+        chart_type,
+        granularity,
+        onSymbolChange,
+        setChartStatus,
+        symbol,
+        updateChartType,
+        updateGranularity,
+        updateSymbol,
+    } = chart_store;
     const { isDesktop, isMobile } = useDevice();
     const { is_drawer_open } = run_panel;
     const { is_chart_modal_visible } = dashboard;
@@ -33,6 +41,10 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     // @deriv-com/smartcharts-champion and were silently ignored, which is why the
     // canvas never painted.
     const { chartData, getQuotes, subscribeQuotes, unsubscribeQuotes, adapterInitialized } = useSmartChartAdaptor();
+
+    useEffect(() => {
+        if (!symbol) updateSymbol();
+    }, [symbol, updateSymbol]);
 
     useState(() => {
         const isSafariBrowser = () => {
