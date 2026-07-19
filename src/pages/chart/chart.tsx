@@ -42,9 +42,23 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     // canvas never painted.
     const { chartData, getQuotes, subscribeQuotes, unsubscribeQuotes, adapterInitialized } = useSmartChartAdaptor();
 
+    // updateSymbol() reads api_base.active_symbols[0] synchronously. That data
+    // arrives async over the WebSocket, so if this effect fires before it's
+    // populated, updateSymbol() is a no-op (undefined -> undefined never
+    // changes chart_store.symbol), and since the effect's deps never change
+    // it never retries. Poll until active_symbols is actually there.
     useEffect(() => {
-        if (!symbol) updateSymbol();
-    }, [symbol, updateSymbol]);
+        if (symbol) return;
+        updateSymbol();
+        if (chart_store.symbol) return;
+
+        const pollId = setInterval(() => {
+            updateSymbol();
+            if (chart_store.symbol) clearInterval(pollId);
+        }, 100);
+
+        return () => clearInterval(pollId);
+    }, [symbol, updateSymbol, chart_store]);
 
     useState(() => {
         const isSafariBrowser = () => {
